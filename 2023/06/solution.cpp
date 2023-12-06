@@ -1,10 +1,10 @@
-#include <iostream>
 #include <charconv>
 #include <cmath>
 #include <string_view>
 #include <array>
 #include <algorithm>
 #include <ranges>
+
 using namespace std::literals;
 
 constexpr std::string_view input {
@@ -25,16 +25,16 @@ constexpr size_t get_number_of_races(std::string_view line) {
 	return std::ranges::distance(std::views::split(line, " "sv) | std::views::filter(std::ranges::size));
 }
 
-size_t race_to_win_ranges(size_t time, size_t distance) {
-	double x1 = (time - std::sqrt(time*time - 4*distance))/2;
-	double x2 = (time + std::sqrt(time*time - 4*distance))/2;
-	double min = std::ceil(std::min(x1, x2));
-	double max = std::floor(std::max(x1, x2));
-	size_t lower_bound = min;
-	size_t upper_bound = max;
-	if(lower_bound == std::min(x1, x2)) lower_bound++;
-	if(upper_bound == std::max(x1, x2)) upper_bound--;
-	return upper_bound - lower_bound + 1;
+constexpr double half_assed_sqrt(double n) {
+	return std::ranges::fold_left(std::views::iota(1, 120), n/2, [n](double acc, int _) { return (acc*acc + n)/2/acc; });
+}
+
+constexpr size_t race_to_win_ranges(size_t time, size_t distance) {
+	double x1 = (time - half_assed_sqrt(time*time - 4*distance))/2;
+	double x2 = (time + half_assed_sqrt(time*time - 4*distance))/2;
+	size_t min = std::floor(x1);
+	size_t max = std::ceil(x2);
+	return max - min - 1;
 }
 
 template<size_t races>
@@ -59,11 +59,13 @@ constexpr auto calc_pipeline = std::views::zip_transform(
 		race_to_win_ranges,
 		timings_p1,
 		distances_p1);
-constexpr auto timings_p2 = std::ranges::fold_right(input_lines[0] | std::views::filter(is_digit), 0uz, [](size_t acc, char c) {
+constexpr size_t timings_p2 = std::ranges::fold_left(input_lines[0].substr(input_lines[0].find_first_of("1234567890"sv)) | std::views::filter(is_digit), 0uz, [](size_t acc, char c) {
 	return acc*10uz+c-'0';
 });
-constexpr auto distances_p2 = std::ranges::fold_right(input_lines[1] | std::views::filter(is_digit), 0uz, [](size_t acc, char c) {
+constexpr size_t distances_p2 = std::ranges::fold_left(input_lines[1].substr(input_lines[1].find_first_of("1234567890"sv)) | std::views::filter(is_digit), 0uz, [](size_t acc, char c) {
 	return acc*10uz+c-'0';
 });
-size_t part1 = std::ranges::fold_left(calc_pipeline, 1uz, std::multiplies{});
-size_t part2 = race_to_win_ranges(timings_p2, distances_p2);
+constexpr size_t part1 = std::ranges::fold_left(calc_pipeline, 1uz, std::multiplies{});
+constexpr size_t part2 = race_to_win_ranges(timings_p2, distances_p2);
+size_t r1 = part1;
+size_t r2 = part2;
