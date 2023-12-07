@@ -1033,12 +1033,13 @@ struct hand {
 	constexpr auto operator<=>(const struct hand&) const = default;
 };
 
+template<bool part1>
 constexpr int card_to_number(char c) {
 	switch(c) {
 		case 'A': return 14;
 		case 'K': return 13;
 		case 'Q': return 12;
-		case 'J': return 11;
+		case 'J': return 11 - !part1*10;
 		case 'T': return 10;
 		 default: return c - '0';
 	}
@@ -1056,7 +1057,7 @@ constexpr hand parse_line(std::string_view line) {
 	std::array<int, 15> cards_and_counts{};
 	for(char c : hand) {
 		if(part1 || c != 'J')
-			cards_and_counts[card_to_number(c)]++;
+			cards_and_counts[card_to_number<part1>(c)]++;
 	}
 	auto max_it = std::ranges::max_element(cards_and_counts);
 	if constexpr (!part1) {
@@ -1076,7 +1077,7 @@ constexpr hand parse_line(std::string_view line) {
 		case 2: h.kind = pair_count == 2 ? hand_kind::two_pairs  : hand_kind::one_pair; break;
 	}
 	std::ranges::copy(
-		std::views::transform(hand, [](char c) static { return !part1 && c == 'J' ? 1 : card_to_number(c); }),
+		std::views::transform(hand, card_to_number<part1>),
 		h.hand.begin()
 	);
 	return h;
