@@ -1,5 +1,4 @@
 #include <charconv>
-#include <cmath>
 #include <string_view>
 #include <array>
 #include <algorithm>
@@ -7,18 +6,20 @@
 
 using namespace std::literals;
 
-constexpr std::string_view input {
-R"(Time:        53     71     78     80
-Distance:   275   1181   1215   1524)"sv
+constexpr char raw_input[] {
+#include "input.h"
 };
+
+constexpr std::string_view input(raw_input, sizeof(raw_input) - 1); // Strip trailing new line.
+
 template<size_t size>
 constexpr auto input_to_lines(std::string_view input) {
 	std::array<std::string_view, size> lines{};
-	std::ranges::transform(std::views::split(input, "\n"sv), lines.begin(), [](auto&& l) { return std::string_view(l); });
+	std::ranges::transform(std::views::split(input, "\n"sv), lines.begin(), [](auto&& l) static { return std::string_view(l); });
 	return lines;
 }
 
-constexpr auto is_digit = [](char c) { return '0' <= c && c <= '9'; };
+constexpr auto is_digit = [](char c) static { return '0' <= c && c <= '9'; };
 
 constexpr size_t get_number_of_races(std::string_view line) {
 	line.remove_prefix(line.find_first_of("123456789"));
@@ -32,8 +33,8 @@ constexpr double half_assed_sqrt(double n) {
 constexpr size_t race_to_win_ranges(size_t time, size_t distance) {
 	double x1 = (time - half_assed_sqrt(time*time - 4*distance))/2;
 	double x2 = (time + half_assed_sqrt(time*time - 4*distance))/2;
-	size_t min = std::floor(x1);
-	size_t max = std::ceil(x2);
+	size_t min = x1;
+	size_t max = x2 + 0.5;
 	return max - min - 1;
 }
 
@@ -41,7 +42,7 @@ template<size_t races>
 constexpr auto get_data(std::string_view line) {
 	std::array<size_t, races> data;
 	line.remove_prefix(line.find_first_of("123456789"));
-	std::ranges::transform(std::views::split(line, " "sv) | std::views::filter(std::ranges::size), data.begin(), [](auto&& r) {
+	std::ranges::transform(std::views::split(line, " "sv) | std::views::filter(std::ranges::size), data.begin(), [](auto&& r) static {
 		std::string_view sv(r);
 		size_t d = 0uz;
 		std::from_chars(sv.begin(), sv.end(), d);
@@ -59,10 +60,10 @@ constexpr auto calc_pipeline = std::views::zip_transform(
 		race_to_win_ranges,
 		timings_p1,
 		distances_p1);
-constexpr size_t timings_p2 = std::ranges::fold_left(input_lines[0].substr(input_lines[0].find_first_of("1234567890"sv)) | std::views::filter(is_digit), 0uz, [](size_t acc, char c) {
+constexpr size_t timings_p2 = std::ranges::fold_left(input_lines[0].substr(input_lines[0].find_first_of("1234567890"sv)) | std::views::filter(is_digit), 0uz, [](size_t acc, char c) static {
 	return acc*10uz+c-'0';
 });
-constexpr size_t distances_p2 = std::ranges::fold_left(input_lines[1].substr(input_lines[1].find_first_of("1234567890"sv)) | std::views::filter(is_digit), 0uz, [](size_t acc, char c) {
+constexpr size_t distances_p2 = std::ranges::fold_left(input_lines[1].substr(input_lines[1].find_first_of("1234567890"sv)) | std::views::filter(is_digit), 0uz, [](size_t acc, char c) static {
 	return acc*10uz+c-'0';
 });
 constexpr size_t part1 = std::ranges::fold_left(calc_pipeline, 1uz, std::multiplies{});
