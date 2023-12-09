@@ -12,3 +12,6 @@
 5.1. Assuming a few things allows for a much more efficient solution and it just
      so happens that those assumptions hold invariably in puzzle for day 8.
      Spoiler: one can use LCM to get the result. Sigh...
+6. Day 9 has a much nicer solution that can be done in O(n), instead of O(n^2).
+   Spoiler 0: find the formula for the next element in terms of existing and recognize the pascal triangle.
+   Spoiler 1: Pascal triangle coefficients can be calculated with a bit of combinatorics.
